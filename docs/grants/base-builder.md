@@ -36,20 +36,25 @@ Live at github.com/star7js/sentinel, tested, CI green:
 - Policy engine: contract allowlists, per-tx / per-session USDC + ETH spend caps,
   approval limits (infinite approvals blocked by default), EIP-7702 delegation
   checks
+- **Fork simulation via Anvil** — the core "effects over intent" differentiator:
+  transactions run on a Base fork before signing, and policy judges the decoded
+  effects (balance diffs, approvals, delegations), not what the calldata claims
 - Signer proxy with human escalation — out-of-policy transactions throw instead
   of signing
-- Test suite including the router-injection attack scenario, blocked
+- Test suite runs against a live node in CI, including the router-injection
+  scenario end-to-end: the in-policy payment signs, the injected unlimited
+  approval is blocked before the signer
 
 ## What this grant funds
 
-1. **Base fork simulation** (Anvil): decode actual balance diffs, approvals, and
-   delegations before signing — the core "effects over intent" differentiator
-2. **Live demo on Base**: the documented router-injection attack replayed against
+1. **Live demo on Base**: the documented router-injection attack replayed against
    a Base fork and blocked, reproducible by anyone
+2. **Open threat feeds**: known drainer addresses (ScamSniffer,
+   eth-phishing-detect) checked before anything signs
 3. **Integration examples** for agent frameworks building on Base + v0.1 npm
    release
 
-Timeline: 6–8 weeks.
+Timeline: 4–6 weeks.
 
 ## Ask
 

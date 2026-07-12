@@ -37,10 +37,28 @@ const guarded = new SentinelSigner(myRawSigner, policy, new NoopSimulator(), emp
 // Out-of-policy transactions throw SentinelBlockedError instead of signing.
 ```
 
+### With fork simulation (recommended)
+
+`NoopSimulator` escalates everything because effects can't be verified. To judge
+transactions by what they *actually do*, point Sentinel at a local fork of your
+chain (requires [foundry](https://getfoundry.sh)'s `anvil`; a Hardhat node works too):
+
+```ts
+import { AnvilSimulator, startAnvil } from 'sentinel-firewall';
+
+const anvil = await startAnvil({ forkUrl: 'https://mainnet.base.org', chainId: 8453 });
+const guarded = new SentinelSigner(myRawSigner, policy, new AnvilSimulator(anvil.rpcUrl), emptyIntel(), new RejectingEscalator());
+```
+
+Each candidate transaction is executed on the fork (snapshot → run → revert) and
+its decoded effects — balance diffs, approvals granted, EIP-7702 delegations,
+contracts touched — are what the policy engine evaluates. A tool call that "looks
+like" a $10 payment but grants an unlimited approval is blocked for what it does.
+
 ## Status / roadmap
 
 - [x] **M1** Policy engine + signer proxy (this repo, tested)
-- [ ] **M2** Anvil fork simulation with effect decoding (`src/simulation/simulator.ts` has the plan)
+- [x] **M2** Anvil fork simulation with effect decoding (`src/simulation/anvil.ts`, tested against a live node)
 - [ ] **M3** Open threat feed ingestion + Telegram/webhook escalation
 - [ ] **M4** Live demo: router-injection attack replayed and blocked
 
