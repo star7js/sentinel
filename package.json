@@ -1,11 +1,14 @@
 {
   "name": "sentinel-firewall",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Open source signing firewall for AI agent wallets: policy engine + simulation + threat intel before anything gets signed.",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "sentinel-mcp": "dist/mcp/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

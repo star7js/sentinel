@@ -46,7 +46,8 @@ self-hostable, wallet-agnostic equivalent.
 
 ## Current state (proof of execution)
 
-Milestones 1–4 and v0.2 are complete and public at github.com/star7js/sentinel:
+The core roadmap (M1–M4, v0.2, v0.3) is complete and public at
+github.com/star7js/sentinel:
 
 - **M1** — policy engine (chain allowlists, contract allow/blocklists, per-tx and
   per-session spend caps, approval limits, 7702 delegation checks), YAML policy
@@ -68,10 +69,14 @@ Milestones 1–4 and v0.2 are complete and public at github.com/star7js/sentinel
   against a local chain and blocked live (`npm run demo`); self-checking and
   run in CI on every commit.
 - **v0.2 signature guarding** — EIP-712 permits (ERC-2612, DAI-style, Permit2
-  single/batch/transfer) decoded into approval effects and policed by the same
-  rule pipeline, closing the gasless-drain path that bypasses transaction-level
-  firewalls; replayable (chainId-less) and unrecognized payloads never sign
-  silently.
+  single/batch/transfer) and Seaport orders decoded into approval effects and
+  policed by the same rule pipeline, closing the gasless-drain path that
+  bypasses transaction-level firewalls; replayable (chainId-less) and
+  unrecognized payloads never sign silently.
+- **v0.3 adoption surface** — viem/ethers adapters, ERC-4337 userOperation
+  guarding (spend caps attribute to the smart account, not the EntryPoint),
+  and `sentinel-mcp`: the guarded wallet served as an MCP tool, so a blocked
+  transaction returns its policy explanation to the model instead of signing.
 
 MIT licensed, zero required infrastructure, one-line integration (wrap the signer).
 
@@ -81,28 +86,30 @@ degrades to a silent ALLOW** — errors and missing simulation escalate or block
 
 ## Scope of this grant
 
+The build is done; what a solo unfunded developer cannot provide is assurance,
+sustained maintenance, and ecosystem integration. That is the ask:
+
 | Milestone | Deliverable | Timeline |
 |---|---|---|
-| M5 | **Adoption surface**: viem/ethers signer adapters, an MCP-server wallet wrapper (the safe "send transaction" tool for agent frameworks), integration examples for ≥2 frameworks; policy schema RFC for community iteration | Weeks 1–3 |
-| M6 | **ERC-4337 smart accounts**: guard userOperations (bundler-path simulation and policy evaluation) so agents behind smart accounts get the same protection as EOA agents | Weeks 4–6 |
-| M7 | **Marketplace-order coverage**: extend the typed-data decoder to Seaport-style order formats; publish the decoder registry so the community can add formats | Weeks 7–8 |
-| — | **Independent security review** of the signer proxy, simulation, and typed-data decode paths, findings published | parallel |
+| A1 | **Independent security audit** of the signer proxy, simulation, and typed-data decode paths — the components agents' funds depend on — with findings published and fixed | Weeks 1–4 |
+| A2 | **Integration program**: working examples merged into ≥2 agent frameworks / wallet SDKs (not just published on our side); policy schema RFC with community iteration | Weeks 2–6 |
+| A3 | **Intent-vs-effect layer (v0.4)**: compare the agent's stated intent with the simulated effects using an LLM judge as an additional escalation signal — the research-grade piece of the original proposal | Weeks 5–10 |
+| A4 | **Maintenance commitment**: threat-feed operations, decoder registry for community-contributed formats, dependency/security response for 12 months | ongoing |
 
 ## Success metrics
 
-- Release on npm under MIT with the reproducible attack-blocked demo
-- ≥2 working framework/SDK integration examples + MCP server wrapper published
-- ERC-4337 userOp guarding shipped; Seaport orders decoded
-- Policy schema RFC published for community iteration
-- Independent security review completed and published
+- Audit completed, findings published and remediated
+- ≥2 upstream framework integrations merged, not just documented
+- Policy schema RFC with external contributors
+- v0.4 intent-vs-effect layer shipped with a reproducible evaluation
+- 12-month maintenance track record (feeds uptime, response SLAs)
 
 ## Ask
 
-⚠️ TODO — confirm amount. Suggested: **$30,000** — 8 weeks of full-time solo
-development (M4–M6) at a rate consistent with ESP small-grant norms, plus
-**$6,000** earmarked for an independent review of the signer proxy and
-simulation paths (the components whose failure would be catastrophic).
-Total: **$36,000**.
+⚠️ TODO — confirm amount. Suggested: **$36,000** — **$12,000** for the
+independent security audit (A1), **$18,000** for ~10 weeks of part-time
+development and integration work (A2–A3), and **$6,000** retainer for the
+12-month maintenance commitment (A4).
 
 ## About me
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.0 — 2026-07-12
+
+### Adoption surface
+- **viem/ethers adapters** (`fromViemWalletClient`, `fromEthersSigner`, typed-
+  data variants): structurally typed, no new dependencies; the ethers adapter
+  refuses 7702 authorization lists rather than dropping them.
+- **`sentinel-mcp`**: a policy-guarded wallet served over the Model Context
+  Protocol (stdio, zero-dependency implementation). Blocked transactions
+  return the human-readable rule summaries to the model as tool errors.
+- **ERC-4337 guarding**: `SentinelUserOpSender` wraps any bundler client;
+  simulation impersonates the EntryPoint executing the account's callData and
+  `TxRequest.onBehalfOf` attributes spend caps and session accounting to the
+  smart account.
+- **Seaport order decoding**: `OrderComponents`/`BulkOrder` offers decode as
+  approvals to an unknowable counterparty — signed orders always at least
+  escalate.
+- Test files now run serially (`vitest.config.ts`) so live-node suites can
+  share one RPC without snapshot races.
+
 ## 0.2.0 — 2026-07-12
 
 ### Signature guarding

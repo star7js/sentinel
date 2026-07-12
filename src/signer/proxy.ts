@@ -97,10 +97,11 @@ export class SentinelSigner implements UnderlyingSigner {
     const hash = await this.inner.signAndSend(tx);
 
     // Session accounting only after a successful send (see SPEC §5).
+    const subject = (tx.onBehalfOf ?? tx.from).toLowerCase();
     this.state.txCount += 1;
     if (effects) {
       for (const d of effects.balanceDiffs) {
-        if (d.address.toLowerCase() !== tx.from.toLowerCase() || d.delta >= 0n) continue;
+        if (d.address.toLowerCase() !== subject || d.delta >= 0n) continue;
         if (d.token === 'native') this.state.spentBySession += -d.delta;
         else {
           const k = d.token.toLowerCase() as `0x${string}`;

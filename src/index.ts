@@ -45,3 +45,23 @@ export {
   DecodedTypedData,
 } from './signatures/typed-data.js';
 export { SentinelTypedDataSigner, UnderlyingTypedDataSigner } from './signatures/signer.js';
+export {
+  fromViemWalletClient,
+  fromViemTypedDataSigner,
+  ViemWalletClientLike,
+} from './adapters/viem.js';
+export {
+  fromEthersSigner,
+  fromEthersTypedDataSigner,
+  EthersSignerLike,
+} from './adapters/ethers.js';
+export {
+  SentinelUserOpSender,
+  UnderlyingUserOpSender,
+  UserOperationLike,
+  UserOpContext,
+  userOpToTxRequest,
+  ENTRYPOINT_V07,
+  ENTRYPOINT_V06,
+} from './aa/userop.js';
+export { runMcpWallet, handleMcpMessage, McpWalletOptions } from './mcp/server.js';

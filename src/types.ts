@@ -17,6 +17,13 @@ export interface TxRequest {
   data: Hex;
   nonce?: number;
   authorizationList?: Eip7702Authorization[];
+  /**
+   * The account whose funds are policed, when it differs from `from` — e.g.
+   * an ERC-4337 smart account whose calldata the EntryPoint executes. Spend
+   * caps and session accounting attribute to this address; `from` stays the
+   * transaction sender for simulation.
+   */
+  onBehalfOf?: Address;
 }
 
 export interface BalanceDiff {

@@ -145,6 +145,40 @@ export function decodeTypedData(req: TypedDataRequest): DecodedTypedData | null 
     return { owner: ZERO_ADDRESS, contractsInvolved: contracts, approvals };
   }
 
+  // Seaport-style orders: the offer array is what the signer gives up. An
+  // order is fulfillable by whoever presents it, so — like SignatureTransfer —
+  // the counterparty is modeled as the zero address and can never satisfy an
+  // allowlist: a signed order always at least escalates to a human.
+  if (req.primaryType === 'OrderComponents' || req.primaryType === 'BulkOrder') {
+    const orders =
+      req.primaryType === 'OrderComponents'
+        ? [m]
+        : Array.isArray(m.tree)
+          ? (m.tree.flat(Infinity) as Record<string, unknown>[])
+          : null;
+    if (!orders) return null;
+    const approvals: ApprovalEffect[] = [];
+    const contracts: Address[] = verifying ? [verifying, ZERO_ADDRESS] : [ZERO_ADDRESS];
+    let owner: Address = ZERO_ADDRESS;
+    for (const order of orders) {
+      if (isAddress(order.offerer)) owner = order.offerer;
+      if (!Array.isArray(order.offer)) return null;
+      for (const item of order.offer) {
+        const entry = item as { token?: unknown; startAmount?: unknown; endAmount?: unknown };
+        const start = toBigInt(entry.startAmount);
+        const end = toBigInt(entry.endAmount);
+        if (!isAddress(entry.token) || start === null || end === null) return null;
+        approvals.push({
+          token: entry.token.toLowerCase() as Address,
+          spender: ZERO_ADDRESS,
+          amount: start > end ? start : end,
+        });
+        contracts.push(entry.token.toLowerCase() as Address);
+      }
+    }
+    return { owner, contractsInvolved: contracts, approvals };
+  }
+
   return null;
 }
 

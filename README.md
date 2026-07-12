@@ -86,11 +86,43 @@ const guardedSigner = new SentinelTypedDataSigner(myTypedDataSigner, policy, fee
 await guardedSigner.signTypedData(request); // throws SentinelBlockedError on violation
 ```
 
-Known permit shapes (ERC-2612, DAI-style, Permit2 single/batch/transfer) are
-decoded into approval effects and run through the same rule pipeline — intel,
-allowlists, approval caps, time windows. Typed data with no `chainId` is
-blocked (cross-chain replay); anything unrecognized is treated like a failed
-simulation and escalates rather than signing silently.
+Known permit shapes (ERC-2612, DAI-style, Permit2 single/batch/transfer,
+Seaport orders) are decoded into approval effects and run through the same
+rule pipeline — intel, allowlists, approval caps, time windows. Typed data
+with no `chainId` is blocked (cross-chain replay); anything unrecognized is
+treated like a failed simulation and escalates rather than signing silently.
+
+### Plug into your stack
+
+```ts
+import { fromViemWalletClient, fromEthersSigner, SentinelUserOpSender } from 'sentinel-firewall';
+
+// viem or ethers — wrap what you already have:
+const guarded = new SentinelSigner(fromViemWalletClient(walletClient), policy, sim, intel, esc);
+const guarded2 = new SentinelSigner(fromEthersSigner(ethersSigner), policy, sim, intel, esc);
+
+// ERC-4337 smart accounts — guard the bundler the same way; spend caps and
+// session accounting attribute to the smart account, not the EntryPoint:
+const bundlerGuard = new SentinelUserOpSender(bundler, { chainId: 8453 }, policy, sim, intel, esc);
+```
+
+### The safe wallet tool for agents (MCP)
+
+The motivating attack is a malicious tool layer — so the wallet tool itself
+enforces policy. `sentinel-mcp` serves a guarded wallet over the Model Context
+Protocol; a blocked transaction returns the rule summaries to the model as a
+tool error instead of signing:
+
+```jsonc
+// e.g. in your agent's MCP config
+{ "mcpServers": { "wallet": { "command": "npx", "args": ["sentinel-mcp"], "env": {
+  "SENTINEL_POLICY": "policies/example.policy.yaml",
+  "SENTINEL_RPC_URL": "https://mainnet.base.org",
+  "SENTINEL_FORK_RPC": "http://127.0.0.1:8545",   // anvil --fork-url ...
+  "SENTINEL_PRIVATE_KEY": "0x…",
+  "SENTINEL_CHAIN_ID": "8453"
+} } } }
+```
 
 ## Status / roadmap
 
@@ -99,7 +131,8 @@ simulation and escalates rather than signing silently.
 - [x] **M3** Open threat feed ingestion (`src/intel/feeds.ts`) + Telegram/webhook escalation (`src/signer/escalators.ts`)
 - [x] **M4** Live demo: router-injection attack replayed and blocked (`npm run demo`, runs in CI); v0.1.0
 - [x] **v0.2** Signature guarding: EIP-712 permits through the same policy (`src/signatures/`) — the drain path that skips transactions entirely
-- [ ] npm publish + integration examples (viem/ethers adapters, MCP server)
+- [x] **v0.3** Adoption surface: viem/ethers adapters, `sentinel-mcp` wallet server, ERC-4337 userOp guarding, Seaport order decoding
+- [ ] npm publish · independent security audit · Solana / intent-vs-effect (future scope)
 
 ## See the attack die
 

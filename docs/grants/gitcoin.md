@@ -44,18 +44,20 @@ unlimited USDC approval — is caught by what it does, not what it claims.
 
 **Why fund it here:** Sentinel is a pure public good. MIT licensed, no token, no
 hosted service, works with any wallet and any framework. Every project in this
-round that touches agent wallets benefits; none is disadvantaged. The engine,
-fork simulation, open threat feeds, Telegram/webhook escalation, signature
-guarding (EIP-712 permits), and a reproducible attack-blocked demo are already
-built and tested against a live node (github.com/star7js/sentinel); your
-funding accelerates adoption: framework integrations, ERC-4337 smart-account
-support, and marketplace-order coverage.
+round that touches agent wallets benefits; none is disadvantaged. The full
+core is already built and tested against a live node
+(github.com/star7js/sentinel): policy engine, fork simulation, open threat
+feeds, Telegram/webhook escalation, EIP-712 signature guarding, ERC-4337
+support, viem/ethers adapters, an MCP wallet server, and a reproducible
+attack-blocked demo that runs in CI. Your funding buys what code alone can't:
+an independent security audit, upstream framework integrations, and sustained
+maintenance of the threat feeds everyone shares.
 
 ## Funding use
 
-- viem/ethers adapters + MCP-server wallet wrapper + framework examples
-- ERC-4337 userOperation guarding; Seaport-style order decoding
-- Independent security review of the signing paths
+- Independent security audit of the signing paths, findings published
+- Framework integrations merged upstream; community decoder registry
+- Threat-feed operations and 12-month maintenance
 
 ## Links & verification
 

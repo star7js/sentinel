@@ -47,6 +47,9 @@ const contractAllowlist: Rule = (tx, effects, p) => {
   const touched = new Set<string>();
   if (tx.to) touched.add(lc(tx.to));
   effects?.contractsTouched.forEach((a) => touched.add(lc(a)));
+  // The policed account itself (a 4337 smart account executing its own
+  // calldata) is the subject, not a counterparty to allowlist.
+  if (tx.onBehalfOf) touched.delete(lc(tx.onBehalfOf));
   const blocked = [...touched].find((a) => p.contractBlock.has(a));
   if (blocked) {
     return {
@@ -83,12 +86,15 @@ const revertCheck: Rule = (_tx, effects) => {
   };
 };
 
-/** Net outflows from `from` per token, from simulated effects; falls back to tx.value. */
+/** Net outflows from the policed account per token, from simulated effects;
+ * falls back to tx.value. The subject is onBehalfOf (4337 smart account) when
+ * set, else from. */
 function outflows(tx: TxRequest, effects: SimulatedEffects | null): Map<string, bigint> {
+  const subject = lc(tx.onBehalfOf ?? tx.from);
   const out = new Map<string, bigint>();
   if (effects) {
     for (const d of effects.balanceDiffs) {
-      if (lc(d.address) !== lc(tx.from) || d.delta >= 0n) continue;
+      if (lc(d.address) !== subject || d.delta >= 0n) continue;
       const key = d.token === 'native' ? 'native' : lc(d.token);
       out.set(key, (out.get(key) ?? 0n) + -d.delta);
     }
