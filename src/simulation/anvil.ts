@@ -5,6 +5,7 @@ import {
   BalanceDiff,
   DelegationEffect,
   Hex,
+  OperatorApprovalEffect,
   SimulatedEffects,
   TxRequest,
 } from '../types.js';
@@ -14,6 +15,8 @@ import { Simulator } from './simulator.js';
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 /** keccak256("Approval(address,address,uint256)") */
 const APPROVAL_TOPIC = '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925';
+/** keccak256("ApprovalForAll(address,address,bool)") */
+const APPROVAL_FOR_ALL_TOPIC = '0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31';
 /** EIP-7702: code of a delegated EOA is 0xef0100 ++ delegate address */
 const DELEGATION_PREFIX = '0xef0100';
 
@@ -124,6 +127,7 @@ export class AnvilSimulator implements Simulator {
           return {
             balanceDiffs: [],
             approvals: [],
+            approvalsForAll: [],
             delegations: [],
             contractsTouched: tx.to ? [tx.to] : [],
             reverted: true,
@@ -144,6 +148,7 @@ export class AnvilSimulator implements Simulator {
       }
 
       const approvals: ApprovalEffect[] = [];
+      const approvalsForAll: OperatorApprovalEffect[] = [];
       const tokenDiffs = new Map<string, bigint>();
       const bump = (holder: Address, token: Address, delta: bigint) => {
         const key = `${lc(holder)}|${lc(token)}`;
@@ -159,6 +164,12 @@ export class AnvilSimulator implements Simulator {
             token: lc(log.address) as Address,
             spender: topicToAddress(log.topics[2]),
             amount: BigInt(log.data),
+          });
+        } else if (log.topics[0] === APPROVAL_FOR_ALL_TOPIC && log.topics.length === 3) {
+          approvalsForAll.push({
+            token: lc(log.address) as Address,
+            operator: topicToAddress(log.topics[2]),
+            approved: BigInt(log.data) !== 0n,
           });
         }
       }
@@ -179,6 +190,7 @@ export class AnvilSimulator implements Simulator {
       return {
         balanceDiffs,
         approvals,
+        approvalsForAll,
         delegations,
         contractsTouched: await this.touchedContracts(hash, tx, receipt),
         reverted: receipt.status === '0x0',

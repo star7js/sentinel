@@ -32,6 +32,7 @@ const baseTx: TxRequest = {
 const cleanEffects = (over: Partial<SimulatedEffects> = {}): SimulatedEffects => ({
   balanceDiffs: [],
   approvals: [],
+  approvalsForAll: [],
   delegations: [],
   contractsTouched: [USDC],
   reverted: false,
@@ -119,5 +120,81 @@ describe('policy engine', () => {
   it('never allows when simulation is unavailable', () => {
     const v = evaluate(baseTx, null, policy, freshState(), emptyIntel());
     expect(v.decision).not.toBe('ALLOW');
+  });
+
+  it('blocks setApprovalForAll grants — the NFT drain move', () => {
+    const effects = cleanEffects({
+      approvalsForAll: [{ token: USDC, operator: DRAINER, approved: true }],
+    });
+    const v = evaluate(baseTx, effects, policy, freshState(), emptyIntel());
+    expect(v.decision).toBe('BLOCK');
+    expect(v.reasons.some((r) => r.ruleId === 'operator-approvals' && r.decision === 'BLOCK')).toBe(
+      true
+    );
+  });
+
+  it('allows operator approval revocations', () => {
+    const effects = cleanEffects({
+      approvalsForAll: [{ token: USDC, operator: DRAINER, approved: false }],
+    });
+    const v = evaluate(baseTx, effects, policy, freshState(), emptyIntel());
+    expect(v.decision).toBe('ALLOW');
+  });
+
+  it('escalates contract creation by default', () => {
+    const v = evaluate(
+      { ...baseTx, to: null },
+      cleanEffects({ contractsTouched: [] }),
+      policy,
+      freshState(),
+      emptyIntel()
+    );
+    expect(v.decision).toBe('ESCALATE');
+    expect(v.reasons.some((r) => r.ruleId === 'contract-creation')).toBe(true);
+  });
+});
+
+describe('time-window rule', () => {
+  const withHours = (start: string, end: string, tz: string) =>
+    compilePolicy(
+      readFileSync(new URL('../policies/example.policy.yaml', import.meta.url), 'utf8').replace(
+        /activeHours: null.*/,
+        `activeHours: { start: "${start}", end: "${end}", tz: "${tz}" }`
+      ),
+      { usdc: { address: USDC, decimals: 6 } }
+    );
+
+  const NOON_UTC = Date.UTC(2026, 0, 15, 12, 0, 0);
+  const THREE_AM_UTC = Date.UTC(2026, 0, 15, 3, 0, 0);
+
+  it('allows inside the window, blocks outside it', () => {
+    const p = withHours('09:00', '18:00', 'UTC');
+    expect(evaluate(baseTx, cleanEffects(), p, freshState(), emptyIntel(), NOON_UTC).decision).toBe(
+      'ALLOW'
+    );
+    const v = evaluate(baseTx, cleanEffects(), p, freshState(), emptyIntel(), THREE_AM_UTC);
+    expect(v.decision).toBe('BLOCK');
+    expect(v.reasons.some((r) => r.ruleId === 'time-window' && r.decision === 'BLOCK')).toBe(true);
+  });
+
+  it('handles overnight windows that wrap midnight', () => {
+    const p = withHours('22:00', '06:00', 'UTC');
+    expect(
+      evaluate(baseTx, cleanEffects(), p, freshState(), emptyIntel(), THREE_AM_UTC).decision
+    ).toBe('ALLOW');
+    expect(evaluate(baseTx, cleanEffects(), p, freshState(), emptyIntel(), NOON_UTC).decision).toBe(
+      'BLOCK'
+    );
+  });
+
+  it('escalates (never allows) on an invalid time zone', () => {
+    const p = withHours('09:00', '18:00', 'Not/AZone');
+    const v = evaluate(baseTx, cleanEffects(), p, freshState(), emptyIntel(), NOON_UTC);
+    expect(v.decision).toBe('ESCALATE');
+    expect(v.reasons.some((r) => r.ruleId === 'internal-error')).toBe(true);
+  });
+
+  it('rejects malformed activeHours at policy load', () => {
+    expect(() => withHours('9am', '18:00', 'UTC')).toThrow();
   });
 });

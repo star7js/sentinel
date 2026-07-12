@@ -15,7 +15,8 @@ type Rule = (
   effects: SimulatedEffects | null,
   policy: CompiledPolicy,
   state: SessionState,
-  intel: ThreatIntel
+  intel: ThreatIntel,
+  nowMs: number
 ) => RuleResult;
 
 const lc = (a: string) => a.toLowerCase();
@@ -158,6 +159,59 @@ const approvalLimits: Rule = (_tx, effects, p) => {
   return { ruleId: 'approval-limits', decision: 'ALLOW', humanSummary: 'Approvals within limits.' };
 };
 
+const contractCreation: Rule = (tx, _e, p) => {
+  if (tx.to !== null) {
+    return { ruleId: 'contract-creation', decision: 'ALLOW', humanSummary: 'Not a contract creation.' };
+  }
+  return {
+    ruleId: 'contract-creation',
+    decision: p.defaults.contractCreation,
+    humanSummary: 'Deploys new contract code from the agent account.',
+  };
+};
+
+const operatorApprovals: Rule = (_tx, effects, p) => {
+  if (!effects) return { ruleId: 'operator-approvals', decision: 'ALLOW', humanSummary: 'No simulation; no operator approvals decoded.' };
+  const grant = effects.approvalsForAll.find((a) => a.approved);
+  if (grant) {
+    // setApprovalForAll hands an operator every token in the collection —
+    // the NFT-drain equivalent of an infinite approval, treated the same way.
+    return {
+      ruleId: 'operator-approvals',
+      decision: p.approvals.infinite,
+      humanSummary: `Grants operator ${grant.operator} control over ALL tokens of ${grant.token}.`,
+    };
+  }
+  return { ruleId: 'operator-approvals', decision: 'ALLOW', humanSummary: 'No operator approvals granted.' };
+};
+
+/** Current HH:MM in the given IANA time zone. Throws on a bad tz (→ ESCALATE). */
+function hhmmInTz(nowMs: number, tz: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(nowMs));
+}
+
+const timeWindow: Rule = (_tx, _e, p, _s, _i, nowMs) => {
+  if (!p.activeHours) {
+    return { ruleId: 'time-window', decision: 'ALLOW', humanSummary: 'No active-hours restriction set.' };
+  }
+  const { start, end, tz } = p.activeHours;
+  const now = hhmmInTz(nowMs, tz);
+  // Overnight windows (e.g. 22:00–06:00) wrap around midnight.
+  const inside = start <= end ? now >= start && now <= end : now >= start || now <= end;
+  return {
+    ruleId: 'time-window',
+    decision: inside ? 'ALLOW' : 'BLOCK',
+    humanSummary: inside
+      ? `Within active hours (${start}–${end} ${tz}).`
+      : `Outside active hours: it is ${now} ${tz}, permitted window is ${start}–${end}.`,
+  };
+};
+
 const delegationCheck: Rule = (tx, effects, p) => {
   const delegates = new Set<string>();
   tx.authorizationList?.forEach((a) => delegates.add(lc(a.address)));
@@ -177,11 +231,14 @@ const RULES: Rule[] = [
   chainAllowed,
   intelBlocklist,
   contractAllowlist,
+  contractCreation,
   revertCheck,
   spendPerTx,
   spendPerSession,
   approvalLimits,
+  operatorApprovals,
   delegationCheck,
+  timeWindow,
 ];
 
 export function evaluate(
@@ -189,7 +246,8 @@ export function evaluate(
   effects: SimulatedEffects | null,
   policy: CompiledPolicy,
   state: SessionState,
-  intel: ThreatIntel
+  intel: ThreatIntel,
+  nowMs: number = Date.now()
 ): Verdict {
   const reasons: RuleResult[] = [];
 
@@ -205,7 +263,7 @@ export function evaluate(
   for (const rule of RULES) {
     let result: RuleResult;
     try {
-      result = rule(tx, effects, policy, state, intel);
+      result = rule(tx, effects, policy, state, intel, nowMs);
     } catch (err) {
       // Deny-on-error is non-negotiable: a throwing rule can never degrade to ALLOW.
       result = {

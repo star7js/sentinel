@@ -31,6 +31,7 @@ interface TxRequest {
 interface SimulatedEffects {
   balanceDiffs: { address: Address; token: Address | 'native'; delta: bigint }[];
   approvals: { token: Address; spender: Address; amount: bigint }[];   // amount = 2^256-1 → infinite
+  approvalsForAll: { token: Address; operator: Address; approved: boolean }[]; // ERC-721/1155 setApprovalForAll
   delegations: { authority: Address; delegate: Address }[];           // EIP-7702
   contractsTouched: Address[];
   reverted: boolean;
@@ -53,6 +54,7 @@ schemaVersion: 1
 defaults:
   unknownContract: escalate     # allow | block | escalate
   onSimulationFailure: escalate # block | escalate (allow is invalid)
+  contractCreation: escalate    # block | escalate (allow is invalid); applies when to === null
 
 chains:
   allowed: [8453]               # Base only for v1
@@ -101,12 +103,16 @@ Rules run in fixed order; **first BLOCK wins immediately; ESCALATE accumulates; 
 1. `chain-allowed` — chainId in policy.chains.allowed
 2. `intel-blocklist` — `to` and all `contractsTouched` absent from threat feeds (feed data injected as input)
 3. `contract-allowlist` — every touched contract allowed, or handled per `defaults.unknownContract`
-4. `revert-check` — simulated tx must not revert (revert → BLOCK; agents retrying reverts is a known failure/attack amplifier)
-5. `spend-per-tx` — net negative balance diffs on `from` within per-tx caps (native and per-token)
-6. `spend-per-session` — cumulative including this tx within session caps
-7. `approval-limits` — every approval in effects within `approvals.maxAmount`; infinite approvals per `approvals.infinite`
-8. `delegation-check` — any 7702 authorization or delegation effect must match `delegations.allow`
-9. `time-window` — current time within `activeHours` if set
+4. `contract-creation` — `to === null` handled per `defaults.contractCreation` (block/escalate; never silently allowed)
+5. `revert-check` — simulated tx must not revert (revert → BLOCK; agents retrying reverts is a known failure/attack amplifier)
+6. `spend-per-tx` — net negative balance diffs on `from` within per-tx caps (native and per-token)
+7. `spend-per-session` — cumulative including this tx within session caps
+8. `approval-limits` — every approval in effects within `approvals.maxAmount`; infinite approvals per `approvals.infinite`
+9. `operator-approvals` — `setApprovalForAll` grants (ERC-721/1155 collection-wide operator control) treated like infinite approvals, per `approvals.infinite`; revocations allowed
+10. `delegation-check` — any 7702 authorization or delegation effect must match `delegations.allow`
+11. `time-window` — current time (in `activeHours.tz`) within the window if set; outside → BLOCK; overnight windows (start > end) wrap midnight; an invalid tz escalates
+
+Evaluation takes an optional `nowMs` parameter (default `Date.now()`) so time-dependent rules stay deterministic under test.
 
 Each rule returns `{ ruleId, decision, humanSummary }`. `humanSummary` is mandatory: it is what the escalation message shows the human (e.g. "This transaction grants unlimited USDC spending to 0xabc… (unrecognized contract)").
 

@@ -2,6 +2,7 @@ schemaVersion: 1
 defaults:
   unknownContract: escalate
   onSimulationFailure: escalate
+  contractCreation: escalate   # block | escalate; applies when tx.to is null
 
 chains:
   allowed: [8453]   # Base
@@ -33,4 +34,4 @@ delegations:
   default: escalate
 
 time:
-  activeHours: null
+  activeHours: null   # or { start: "09:00", end: "18:00", tz: "UTC" }; outside the window txs are blocked

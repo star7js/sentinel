@@ -15,6 +15,7 @@ const DRAINER = '0xdead00000000000000000000000000000000beef' as Address;
 const ERC20_ABI = parseAbi([
   'function transfer(address to, uint256 value) returns (bool)',
   'function approve(address spender, uint256 value) returns (bool)',
+  'function setApprovalForAll(address operator, bool approved)',
   'function balanceOf(address owner) view returns (uint256)',
 ]);
 
@@ -133,6 +134,21 @@ describe.skipIf(!EXTERNAL_RPC && !hasAnvil)('AnvilSimulator', () => {
       token: token.toLowerCase(),
       spender: DRAINER,
       amount: INFINITE_APPROVAL,
+    });
+  });
+
+  it('decodes setApprovalForAll — the NFT drain move', async () => {
+    const data = encodeFunctionData({
+      abi: ERC20_ABI,
+      functionName: 'setApprovalForAll',
+      args: [DRAINER, true],
+    });
+    const effects = await sim.simulate(baseTx({ data }));
+    expect(effects).not.toBeNull();
+    expect(effects!.approvalsForAll).toContainEqual({
+      token: token.toLowerCase(),
+      operator: DRAINER,
+      approved: true,
     });
   });
 
