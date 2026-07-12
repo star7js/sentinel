@@ -6,7 +6,9 @@ import { compilePolicy } from '../src/policy/loader.js';
 import { emptyIntel } from '../src/intel/blocklist.js';
 import { SentinelSigner, SentinelBlockedError, RejectingEscalator } from '../src/signer/proxy.js';
 import { Address, Hex, TxRequest, INFINITE_APPROVAL } from '../src/types.js';
-import { MINI_ERC20_BYTECODE } from './fixtures/mini-erc20.js';
+import fixture from './fixtures/mini-erc20.json';
+
+const MINI_ERC20_BYTECODE = fixture.bytecode as Hex;
 
 const AGENT = '0x1111111111111111111111111111111111111111' as Address;
 const BOB = '0x2222222222222222222222222222222222222222' as Address;

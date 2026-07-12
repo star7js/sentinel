@@ -131,13 +131,38 @@ Each rule returns `{ ruleId, decision, humanSummary }`. `humanSummary` is mandat
 | Policy fails schema validation at load | refuse to start |
 | Escalation channel unreachable | `onTimeout` behavior applies immediately |
 
-## 7. Out of scope for v0.1
+## 7. Signature guarding (v0.2)
 
-- LLM-based intent-vs-effect comparison (v0.2 candidate)
+EIP-712 typed data is a drain path that never produces a transaction from the
+victim: a signed permit is redeemed by the attacker at their own expense.
+`evaluateTypedData(request, policy, intel)` closes it by decoding known
+shapes into the §2 effects model and reusing the §4 pipeline verbatim:
+
+- **Decoded shapes**: ERC-2612 `Permit`, DAI-style `Permit` (`allowed: true` →
+  infinite), Permit2 `PermitSingle`/`PermitBatch` (max-uint160 → infinite),
+  Permit2 `PermitTransferFrom`/`PermitBatchTransferFrom` (the redeemer is not
+  in the payload, so the spender is modeled as the zero address and can never
+  satisfy an allowlist).
+- **Domain checks**: a missing `chainId` → BLOCK (the signature would replay on
+  every chain); a chainId outside `chains.allowed` → BLOCK via `chain-allowed`.
+- **Unrecognized or malformed typed data** → treated exactly like a failed
+  simulation: `defaults.onSimulationFailure` applies. Never a silent ALLOW.
+
+`SentinelTypedDataSigner` wraps any `signTypedData` implementation the same
+way `SentinelSigner` wraps the transaction signer. Signed permits do not count
+toward session spend (nothing has moved yet); approval caps are the binding
+control, as with transaction-borne approvals.
+
+## 8. Out of scope for v0.2
+
+- LLM-based intent-vs-effect comparison
+- Marketplace order formats (Seaport et al.) in the typed-data decoder
+- `personal_sign` / raw `eth_sign` guarding (recommendation: do not expose
+  these to agents at all)
 - Multi-chain sessions
 - Solana / non-EVM
 - Hosted anything
 
-## 8. Threat model summary
+## 9. Threat model summary
 
-Assumed attacker: can inject or mutate tool calls upstream of the signer (compromised router, prompt injection, malicious MCP server). Cannot: modify Sentinel's process, policy file, or the fork node. Sentinel's guarantee: no transaction is signed whose *simulated effects* violate the policy, and no failure path degrades to silent ALLOW.
+Assumed attacker: can inject or mutate tool calls upstream of the signer (compromised router, prompt injection, malicious MCP server), including requests for typed-data signatures. Cannot: modify Sentinel's process, policy file, or the fork node. Sentinel's guarantee: no transaction is signed whose *simulated effects* violate the policy, no recognized permit is signed whose decoded approval violates the policy, and no failure path degrades to silent ALLOW.

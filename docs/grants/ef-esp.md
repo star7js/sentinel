@@ -46,7 +46,7 @@ self-hostable, wallet-agnostic equivalent.
 
 ## Current state (proof of execution)
 
-Milestones 1–3 are complete and public at github.com/star7js/sentinel:
+Milestones 1–4 and v0.2 are complete and public at github.com/star7js/sentinel:
 
 - **M1** — policy engine (chain allowlists, contract allow/blocklists, per-tx and
   per-session spend caps, approval limits, 7702 delegation checks), YAML policy
@@ -64,6 +64,14 @@ Milestones 1–3 are complete and public at github.com/star7js/sentinel:
   cache, hourly refresh, last-known-good retention) and human escalation over
   Telegram and webhooks, deny-safe on timeout or channel failure. Session spend
   caps persist across process restarts; time-of-day policy windows enforced.
+- **M4** — reproducible demo: the documented router-injection attack replayed
+  against a local chain and blocked live (`npm run demo`); self-checking and
+  run in CI on every commit.
+- **v0.2 signature guarding** — EIP-712 permits (ERC-2612, DAI-style, Permit2
+  single/batch/transfer) decoded into approval effects and policed by the same
+  rule pipeline, closing the gasless-drain path that bypasses transaction-level
+  firewalls; replayable (chainId-less) and unrecognized payloads never sign
+  silently.
 
 MIT licensed, zero required infrastructure, one-line integration (wrap the signer).
 
@@ -75,16 +83,18 @@ degrades to a silent ALLOW** — errors and missing simulation escalate or block
 
 | Milestone | Deliverable | Timeline |
 |---|---|---|
-| M4 | Public reproducible demo: the documented router-injection attack replayed and blocked live; docs; v0.1 npm release | Weeks 1–2 |
-| M5 | Integration examples for ≥2 agent frameworks / wallet SDKs; policy schema RFC for community iteration | Weeks 3–4 |
-| M6 | **Signature guarding**: most real-world drains use signed messages (EIP-2612 permits, Permit2, marketplace orders), not transactions — decode EIP-712 payloads and run them through the same approval policy, closing the drain path that bypasses transaction-level firewalls entirely | Weeks 5–8 |
+| M5 | **Adoption surface**: viem/ethers signer adapters, an MCP-server wallet wrapper (the safe "send transaction" tool for agent frameworks), integration examples for ≥2 frameworks; policy schema RFC for community iteration | Weeks 1–3 |
+| M6 | **ERC-4337 smart accounts**: guard userOperations (bundler-path simulation and policy evaluation) so agents behind smart accounts get the same protection as EOA agents | Weeks 4–6 |
+| M7 | **Marketplace-order coverage**: extend the typed-data decoder to Seaport-style order formats; publish the decoder registry so the community can add formats | Weeks 7–8 |
+| — | **Independent security review** of the signer proxy, simulation, and typed-data decode paths, findings published | parallel |
 
 ## Success metrics
 
-- v0.1 on npm under MIT, reproducible attack-blocked demo
-- ≥2 working framework/SDK integration examples
-- Policy schema published for community iteration
-- Independent security review of the signer proxy path completed and published
+- Release on npm under MIT with the reproducible attack-blocked demo
+- ≥2 working framework/SDK integration examples + MCP server wrapper published
+- ERC-4337 userOp guarding shipped; Seaport orders decoded
+- Policy schema RFC published for community iteration
+- Independent security review completed and published
 
 ## Ask
 

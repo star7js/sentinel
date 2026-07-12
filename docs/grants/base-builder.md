@@ -47,14 +47,20 @@ Live at github.com/star7js/sentinel, tested, CI green:
   scenario end-to-end: the in-policy payment signs, the injected unlimited
   approval is blocked before the signer
 
+- **Signature guarding**: EIP-712 permits (ERC-2612, DAI, Permit2) decoded and
+  policed by the same policy — the gasless-drain path that skips transactions
+  entirely is closed
+- **Reproducible attack demo** (`npm run demo`): the documented router-injection
+  pattern replayed and blocked live; self-checking, runs in CI on every commit
+
 ## What this grant funds
 
-1. **Live demo on Base**: the documented router-injection attack replayed against
-   a Base fork and blocked, reproducible by anyone
-2. **Integration examples** for agent frameworks building on Base + v0.1 npm
-   release
-3. **Signature guarding**: decode EIP-712 permits/orders (the drain path that
-   skips transactions entirely) and apply the same policy before signing
+1. **Integration examples** for agent frameworks building on Base (viem/ethers
+   adapters, an MCP-server wallet wrapper) + npm release
+2. **ERC-4337 smart-account support**: guard userOperations so Base agents
+   behind smart wallets get the same protection as EOA agents
+3. **Base-fork demo hosting + docs** so any Base builder can reproduce the
+   attack-blocked demo in one command
 
 Timeline: 4–6 weeks.
 
