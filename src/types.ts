@@ -36,9 +36,17 @@ export interface DelegationEffect {
   delegate: Address;
 }
 
+/** ERC-721/1155 setApprovalForAll: operator control over an entire collection. */
+export interface OperatorApprovalEffect {
+  token: Address;
+  operator: Address;
+  approved: boolean;
+}
+
 export interface SimulatedEffects {
   balanceDiffs: BalanceDiff[];
   approvals: ApprovalEffect[];
+  approvalsForAll: OperatorApprovalEffect[];
   delegations: DelegationEffect[];
   contractsTouched: Address[];
   reverted: boolean;
@@ -72,6 +80,7 @@ export interface CompiledPolicy {
   defaults: {
     unknownContract: Decision;
     onSimulationFailure: Exclude<Decision, 'ALLOW'>;
+    contractCreation: Exclude<Decision, 'ALLOW'>;
   };
   chainsAllowed: number[];
   contractAllow: Map<string, string>; // lowercase address → label

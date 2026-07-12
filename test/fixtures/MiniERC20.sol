@@ -12,8 +12,11 @@ contract MiniERC20 {
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
 
+    mapping(address => mapping(address => bool)) public isApprovedForAll;
+
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
     constructor() {
         totalSupply = 1_000_000e6;
@@ -33,6 +36,13 @@ contract MiniERC20 {
         allowance[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
         return true;
+    }
+
+    // ERC-721/1155-style operator approval, included so the simulator's
+    // ApprovalForAll decoding can be exercised against a live node.
+    function setApprovalForAll(address operator, bool approved) external {
+        isApprovedForAll[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     function transferFrom(address from, address to, uint256 value) external returns (bool) {

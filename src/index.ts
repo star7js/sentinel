@@ -10,6 +10,7 @@ export {
   AnvilHandle,
 } from './simulation/anvil.js';
 export { emptyIntel, intelFromAddresses } from './intel/blocklist.js';
+export { SessionStore, MemoryStore, JsonFileStore } from './state/store.js';
 export {
   SentinelSigner,
   SentinelBlockedError,

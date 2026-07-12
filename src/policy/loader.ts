@@ -11,6 +11,7 @@ const schema = z.object({
   defaults: z.object({
     unknownContract: decision,
     onSimulationFailure: nonAllow,
+    contractCreation: nonAllow.default('escalate'),
   }),
   chains: z.object({ allowed: z.array(z.number()) }),
   contracts: z.object({
@@ -30,7 +31,17 @@ const schema = z.object({
     allow: z.array(z.string()).default([]),
     default: nonAllow,
   }),
-  time: z.object({ activeHours: z.any().nullable() }).default({ activeHours: null }),
+  time: z
+    .object({
+      activeHours: z
+        .object({
+          start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'expected HH:MM'),
+          end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'expected HH:MM'),
+          tz: z.string().min(1),
+        })
+        .nullable(),
+    })
+    .default({ activeHours: null }),
 });
 
 const toDecision = (d: string): Decision => d.toUpperCase() as Decision;
@@ -65,6 +76,7 @@ export function compilePolicy(
     defaults: {
       unknownContract: toDecision(raw.defaults.unknownContract),
       onSimulationFailure: toDecision(raw.defaults.onSimulationFailure) as 'BLOCK' | 'ESCALATE',
+      contractCreation: toDecision(raw.defaults.contractCreation) as 'BLOCK' | 'ESCALATE',
     },
     chainsAllowed: raw.chains.allowed,
     contractAllow: new Map(raw.contracts.allow.map((c) => [c.address.toLowerCase(), c.label])),

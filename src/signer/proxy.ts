@@ -1,5 +1,6 @@
 import { evaluate } from '../policy/engine.js';
 import { Simulator } from '../simulation/simulator.js';
+import { MemoryStore, SessionStore } from '../state/store.js';
 import {
   CompiledPolicy,
   SessionState,
@@ -48,15 +49,20 @@ export interface UnderlyingSigner {
  */
 export class SentinelSigner implements UnderlyingSigner {
   private state: SessionState;
+  private store: SessionStore;
 
   constructor(
     private inner: UnderlyingSigner,
     private policy: CompiledPolicy,
     private simulator: Simulator,
     private intel: ThreatIntel,
-    private escalator: Escalator
+    private escalator: Escalator,
+    store?: SessionStore
   ) {
-    this.state = this.freshSession();
+    this.store = store ?? new MemoryStore();
+    // A corrupt store throws here: refusing to start beats fresh caps.
+    this.state = this.store.load() ?? this.freshSession();
+    this.rollSessionIfExpired();
   }
 
   private freshSession(): SessionState {
@@ -104,6 +110,7 @@ export class SentinelSigner implements UnderlyingSigner {
     } else {
       this.state.spentBySession += tx.value;
     }
+    this.store.save(this.state);
 
     return hash;
   }
