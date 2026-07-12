@@ -1,6 +1,6 @@
 {
   "name": "sentinel-firewall",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Open source signing firewall for AI agent wallets: policy engine + simulation + threat intel before anything gets signed.",
   "license": "MIT",
   "type": "module",
@@ -43,6 +43,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "demo": "npm run build && node demo/router-injection.mjs",
     "prepublishOnly": "npm test && npm run build"
   },
   "dependencies": {

@@ -78,7 +78,21 @@ rejects the transaction — the channel being down never means "approved".
 - [x] **M1** Policy engine + signer proxy (this repo, tested)
 - [x] **M2** Anvil fork simulation with effect decoding (`src/simulation/anvil.ts`, tested against a live node)
 - [x] **M3** Open threat feed ingestion (`src/intel/feeds.ts`) + Telegram/webhook escalation (`src/signer/escalators.ts`)
-- [ ] **M4** Live demo: router-injection attack replayed and blocked; v0.1 release
+- [x] **M4** Live demo: router-injection attack replayed and blocked (`npm run demo`, runs in CI); v0.1.0
+- [ ] **v0.2** Signature guarding: EIP-712 permits/orders through the same policy — the drain path that skips transactions entirely
+
+## See the attack die
+
+```bash
+npm install && npm run demo    # needs `anvil` on PATH (https://getfoundry.sh)
+```
+
+The demo replays the documented router-injection pattern on a local chain:
+the agent's legitimate 10 mUSD payment signs; the injected
+`approve(drainer, 2^256-1)` — indistinguishable on calldata alone — is
+simulated, decoded, and blocked before the signer; the under-the-caps
+redirect to an unknown address escalates to a human. Self-checking, runs in
+CI on every commit.
 
 ## Develop
 
