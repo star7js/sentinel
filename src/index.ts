@@ -37,3 +37,11 @@ export {
   Escalator,
   UnderlyingSigner,
 } from './signer/proxy.js';
+export {
+  decodeTypedData,
+  evaluateTypedData,
+  TypedDataRequest,
+  TypedDataDomain,
+  DecodedTypedData,
+} from './signatures/typed-data.js';
+export { SentinelTypedDataSigner, UnderlyingTypedDataSigner } from './signatures/signer.js';

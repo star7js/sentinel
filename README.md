@@ -73,13 +73,33 @@ const guarded = new SentinelSigner(myRawSigner, policy, simulator, feeds.intel, 
 Escalation is deny-safe: a timeout, transport error, or malformed response
 rejects the transaction — the channel being down never means "approved".
 
+### Signature guarding
+
+Most real drains never send a transaction from the victim: the attacker gets a
+signed EIP-712 message — an ERC-2612 permit, a Permit2 grant — and submits it
+themselves. Guard the signing surface too:
+
+```ts
+import { SentinelTypedDataSigner } from 'sentinel-firewall';
+
+const guardedSigner = new SentinelTypedDataSigner(myTypedDataSigner, policy, feeds.intel, escalator);
+await guardedSigner.signTypedData(request); // throws SentinelBlockedError on violation
+```
+
+Known permit shapes (ERC-2612, DAI-style, Permit2 single/batch/transfer) are
+decoded into approval effects and run through the same rule pipeline — intel,
+allowlists, approval caps, time windows. Typed data with no `chainId` is
+blocked (cross-chain replay); anything unrecognized is treated like a failed
+simulation and escalates rather than signing silently.
+
 ## Status / roadmap
 
 - [x] **M1** Policy engine + signer proxy (this repo, tested)
 - [x] **M2** Anvil fork simulation with effect decoding (`src/simulation/anvil.ts`, tested against a live node)
 - [x] **M3** Open threat feed ingestion (`src/intel/feeds.ts`) + Telegram/webhook escalation (`src/signer/escalators.ts`)
 - [x] **M4** Live demo: router-injection attack replayed and blocked (`npm run demo`, runs in CI); v0.1.0
-- [ ] **v0.2** Signature guarding: EIP-712 permits/orders through the same policy — the drain path that skips transactions entirely
+- [x] **v0.2** Signature guarding: EIP-712 permits through the same policy (`src/signatures/`) — the drain path that skips transactions entirely
+- [ ] npm publish + integration examples (viem/ethers adapters, MCP server)
 
 ## See the attack die
 

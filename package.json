@@ -1,6 +1,6 @@
 {
   "name": "sentinel-firewall",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Open source signing firewall for AI agent wallets: policy engine + simulation + threat intel before anything gets signed.",
   "license": "MIT",
   "type": "module",

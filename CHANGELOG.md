@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0 — 2026-07-12
+
+### Signature guarding
+- `SentinelTypedDataSigner` + `evaluateTypedData`: EIP-712 signing requests
+  policed by the same rule pipeline as transactions. Decodes ERC-2612 permits,
+  DAI-style permits (`allowed: true` → infinite), and Permit2
+  single/batch/transfer grants (max-uint160 → infinite; SignatureTransfer's
+  unknowable redeemer can never satisfy an allowlist).
+- Deny-safe domain rules: typed data without a `chainId` is blocked
+  (cross-chain replay); unrecognized or malformed payloads follow
+  `defaults.onSimulationFailure` — never a silent ALLOW.
+
 ## 0.1.0 — 2026-07-12
 
 First feature-complete release of the core firewall (milestones M1–M4).
