@@ -94,10 +94,15 @@ export class AnvilSimulator implements Simulator {
       snapshot = await this.rpc<Hex>('evm_snapshot', []);
 
       const from = lc(tx.from) as Address;
+      const subject = tx.onBehalfOf ? (lc(tx.onBehalfOf) as Address) : null;
       const authorities = [
         ...new Set([from, ...(tx.authorizationList ?? []).map((a) => lc(a.address) as Address)]),
       ];
       const preNative = BigInt(await this.rpc<Hex>('eth_getBalance', [from, 'latest']));
+      const preSubjectNative =
+        subject && subject !== from
+          ? BigInt(await this.rpc<Hex>('eth_getBalance', [subject, 'latest']))
+          : null;
       const preCode = new Map<Address, string>();
       for (const a of authorities) {
         preCode.set(a, lc(await this.rpc<Hex>('eth_getCode', [a, 'latest'])));
@@ -145,6 +150,15 @@ export class AnvilSimulator implements Simulator {
       const nativeDelta = postNative - preNative + gasCost;
       if (nativeDelta !== 0n) {
         balanceDiffs.push({ address: from, token: 'native', delta: nativeDelta });
+      }
+      if (subject && preSubjectNative !== null) {
+        // The policed account (e.g. a 4337 smart account) pays no gas itself
+        // in this simulation, so its raw diff is the actual value moved.
+        const postSubject = BigInt(await this.rpc<Hex>('eth_getBalance', [subject, 'latest']));
+        const subjectDelta = postSubject - preSubjectNative;
+        if (subjectDelta !== 0n) {
+          balanceDiffs.push({ address: subject, token: 'native', delta: subjectDelta });
+        }
       }
 
       const approvals: ApprovalEffect[] = [];

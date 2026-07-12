@@ -53,16 +53,22 @@ Live at github.com/star7js/sentinel, tested, CI green:
 - **Reproducible attack demo** (`npm run demo`): the documented router-injection
   pattern replayed and blocked live; self-checking, runs in CI on every commit
 
+- **ERC-4337 support**: userOperation guarding with spend caps attributed to
+  the smart account — Base agents behind smart wallets get the same protection
+  as EOA agents
+- **Drop-in adoption**: viem/ethers adapters and `sentinel-mcp`, the guarded
+  wallet as an MCP tool for agent frameworks
+
 ## What this grant funds
 
-1. **Integration examples** for agent frameworks building on Base (viem/ethers
-   adapters, an MCP-server wallet wrapper) + npm release
-2. **ERC-4337 smart-account support**: guard userOperations so Base agents
-   behind smart wallets get the same protection as EOA agents
-3. **Base-fork demo hosting + docs** so any Base builder can reproduce the
-   attack-blocked demo in one command
+1. **Merged integrations with Base-native agent stacks** — working examples
+   landed upstream in ≥2 frameworks building on Base, not just documented here
+2. **Independent security review** of the signing paths Base agents would
+   depend on, findings published
+3. **Maintenance**: threat-feed operations and security response so the
+   firewall Base builders adopt stays trustworthy
 
-Timeline: 4–6 weeks.
+Timeline: 4–6 weeks of integration work; audit and maintenance in parallel.
 
 ## Ask
 

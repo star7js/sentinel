@@ -142,7 +142,9 @@ shapes into the §2 effects model and reusing the §4 pipeline verbatim:
   infinite), Permit2 `PermitSingle`/`PermitBatch` (max-uint160 → infinite),
   Permit2 `PermitTransferFrom`/`PermitBatchTransferFrom` (the redeemer is not
   in the payload, so the spender is modeled as the zero address and can never
-  satisfy an allowlist).
+  satisfy an allowlist), and Seaport `OrderComponents`/`BulkOrder` (offer items
+  decode as approvals to an unknowable counterparty — a signed order always at
+  least escalates).
 - **Domain checks**: a missing `chainId` → BLOCK (the signature would replay on
   every chain); a chainId outside `chains.allowed` → BLOCK via `chain-allowed`.
 - **Unrecognized or malformed typed data** → treated exactly like a failed
@@ -153,10 +155,20 @@ way `SentinelSigner` wraps the transaction signer. Signed permits do not count
 toward session spend (nothing has moved yet); approval caps are the binding
 control, as with transaction-borne approvals.
 
-## 8. Out of scope for v0.2
+## 7a. ERC-4337 smart accounts (v0.3)
+
+A userOperation executes as EntryPoint → smart account → target, so the
+transaction sender is not the account at stake. `TxRequest.onBehalfOf` carries
+the policy subject: simulation impersonates the EntryPoint calling the
+account's `callData` (exactly what execution does on-chain) while spend caps,
+session accounting, and the contract allowlist attribute to — and exempt —
+the smart account itself. `SentinelUserOpSender` wraps a bundler client the
+same way `SentinelSigner` wraps a signer. Accounts must already be deployed on
+the fork; initCode deployments fail simulation → `onSimulationFailure`.
+
+## 8. Out of scope for v0.3
 
 - LLM-based intent-vs-effect comparison
-- Marketplace order formats (Seaport et al.) in the typed-data decoder
 - `personal_sign` / raw `eth_sign` guarding (recommendation: do not expose
   these to agents at all)
 - Multi-chain sessions
