@@ -1,5 +1,9 @@
 # Sentinel
 
+[![CI](https://github.com/star7js/sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/star7js/sentinel/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/sentinel-firewall)](https://www.npmjs.com/package/sentinel-firewall)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **An open source signing firewall for AI agent wallets.**
 
 AI agents now hold keys and transact autonomously. The weakest link is the connective tissue between the model and the signer: compromised LLM routers and injected tool calls have already drained real wallets. Sentinel sits between your agent and its signer and refuses to sign anything that violates policy, fails simulation, or touches known-malicious addresses.

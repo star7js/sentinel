@@ -1,6 +1,8 @@
 # Grant Proposal: Sentinel — An Open Source Signing Firewall for AI Agent Wallets
 
-> Target programs: Ethereum Foundation ESP, Base Builder Grants, Optimism Retro Funding (retroactively), Gitcoin rounds. Adapt the "Ask" section per program.
+> This is the master template. Per-program drafts live in `docs/grants/`:
+> [EF ESP](grants/ef-esp.md) · [Base Builder Grants](grants/base-builder.md) ·
+> [Gitcoin](grants/gitcoin.md) · [Optimism Retro Funding](grants/optimism-retro.md) (strategy note — apply later, not now).
 
 ## One-liner
 

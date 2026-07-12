@@ -6,10 +6,44 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "policies/example.policy.yaml"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/star7js/sentinel.git"
+  },
+  "homepage": "https://github.com/star7js/sentinel#readme",
+  "bugs": {
+    "url": "https://github.com/star7js/sentinel/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "wallet-security",
+    "signing",
+    "firewall",
+    "transaction-simulation",
+    "policy-engine",
+    "ethereum",
+    "eip-7702",
+    "web3-security"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm test && npm run build"
   },
   "dependencies": {
     "viem": "^2.21.0",
