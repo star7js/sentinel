@@ -79,8 +79,15 @@ Timeline: 4–6 weeks of integration work; audit and maintenance in parallel.
 
 ⚠️ TODO — name/handle, links to shipped work, this repo's commit history.
 
+## Verify in 2 minutes
+
+```bash
+git clone https://github.com/star7js/sentinel && cd sentinel
+npm install && npm test && npm run demo   # the attack, replayed and blocked
+```
+
 ## Links
 
 - Repo: https://github.com/star7js/sentinel
-- Spec: https://github.com/star7js/sentinel/blob/main/docs/SPEC.md
-- npm: https://www.npmjs.com/package/sentinel-firewall (v0.0.1)
+- Spec (incl. §10 known residual risks): https://github.com/star7js/sentinel/blob/main/docs/SPEC.md
+- npm: https://www.npmjs.com/package/sentinel-firewall
