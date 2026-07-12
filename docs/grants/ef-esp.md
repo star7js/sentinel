@@ -118,6 +118,21 @@ your name/handle, security background or relevant interest, links to shipped
 repos (this one first), anything deployed on-chain, and how reviewers can verify
 your commit history. Link commits, not claims.
 
+## Verify our claims (2 minutes)
+
+Every claim above is mechanically checkable — nothing requires trusting this
+document:
+
+```bash
+git clone https://github.com/star7js/sentinel && cd sentinel
+npm install && npm test && npm run demo
+```
+
+`npm run demo` replays the documented router-injection attack and exits
+non-zero unless the legitimate payment signs AND both injected transactions
+are stopped. CI runs it against real anvil on every commit (see the Actions
+tab). Known residual risks are documented in SPEC §10 rather than omitted.
+
 ## Sustainability
 
 Post-grant: Optimism Retro Funding eligibility once adoption is demonstrable. A

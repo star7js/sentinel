@@ -155,7 +155,22 @@ npm test
 npm run build
 ```
 
-See `docs/SPEC.md` for the policy engine specification and `docs/GRANT_PROPOSAL.md` for the funding pitch.
+See `docs/SPEC.md` for the policy engine specification (including §10, known
+residual risks — stated plainly, because a security tool that hides its limits
+is worse than none), `SECURITY.md` for reporting and deployment guidance, and
+`docs/GRANT_PROPOSAL.md` for the funding pitch.
+
+## Verify every claim yourself
+
+```bash
+git clone https://github.com/star7js/sentinel && cd sentinel
+npm install
+npm test        # 80 tests incl. live-node simulation (needs anvil: getfoundry.sh)
+npm run demo    # the documented attack, replayed and blocked, self-checking
+```
+
+CI runs exactly this — tests plus the attack demo against real anvil — on
+every commit: https://github.com/star7js/sentinel/actions
 
 ## Design principles
 

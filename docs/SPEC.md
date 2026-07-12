@@ -178,3 +178,38 @@ the fork; initCode deployments fail simulation → `onSimulationFailure`.
 ## 9. Threat model summary
 
 Assumed attacker: can inject or mutate tool calls upstream of the signer (compromised router, prompt injection, malicious MCP server), including requests for typed-data signatures. Cannot: modify Sentinel's process, policy file, or the fork node. Sentinel's guarantee: no transaction is signed whose *simulated effects* violate the policy, no recognized permit is signed whose decoded approval violates the policy, and no failure path degrades to silent ALLOW.
+
+## 10. Known residual risks
+
+Stated plainly because a security tool that hides its limits is worse than none.
+None of these break the deny-safe guarantee; they bound what "verified" means.
+
+1. **TOCTOU (time-of-check to time-of-use).** Simulation predicts effects at
+   the fork's state; the real transaction lands one or more blocks later, where
+   state may differ (moved prices, changed allowances, frontrunning). Effects
+   can therefore be *stale*, not forged. Mitigations: session caps bound the
+   worst case regardless; keep the fork fresh (restart or `anvil_reset`
+   periodically); sign promptly after ALLOW.
+2. **Fork staleness.** A long-lived anvil fork pins at its fork block and
+   drifts from the chain tip. The chain-id check catches wrong-chain nodes but
+   not stale state on the right chain. Operational, not architectural: refresh
+   the fork.
+3. **ERC-20 transfer recipients are not allowlisted.** A token *transfer* to
+   an unknown EOA touches only the (allowlisted) token contract — the recipient
+   receives value without being "touched". Per-tx and per-session caps are the
+   binding control on this path, by design: worst-case leakage per session is
+   the session cap. Recipient allowlists are a candidate policy knob for v0.4.
+4. **The simulator trusts its node.** A malicious or compromised fork RPC can
+   report false effects. Run your own node; do not point `SENTINEL_FORK_RPC`
+   at infrastructure you don't control.
+5. **Threat feeds are additive, not exhaustive.** A drainer absent from every
+   feed is caught only by the allowlist/caps layers. Feed *poisoning* can cause
+   false blocks (availability, not fund loss) — the deny-safe direction.
+6. **Typed-data coverage is a registry, not a proof.** Unrecognized formats
+   escalate rather than sign, but a recognized format decoded *incompletely*
+   would understate effects. Decoders are deliberately strict (any malformed
+   field → undecodable) to keep this risk at the format level, not the field
+   level.
+7. **Escalation approves what the human sees.** The summaries are generated
+   from decoded effects; a human approving an escalation is trusting that
+   decode. Everything BLOCK-able is blocked before this point.
