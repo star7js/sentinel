@@ -1,26 +1,21 @@
 import { SimulatedEffects, TxRequest } from '../types.js';
 
 /**
- * M2: Fork simulation via Anvil.
+ * A simulator executes the transaction ahead of signing and reports what it
+ * would actually do. `AnvilSimulator` (./anvil.ts) is the real implementation:
+ * fork simulation with effect decoding.
  *
- * Plan:
- *  - Spawn/attach to `anvil --fork-url <rpc>` for the target chain.
- *  - Use anvil_impersonateAccount + eth_call/debug_traceCall with state overrides.
- *  - Decode effects:
- *      balanceDiffs: pre/post eth_getBalance + ERC20 balanceOf via trace state diffs
- *      approvals:    Approval(address,address,uint256) logs
- *      delegations:  EIP-7702 authorization outcomes / code changes on `from`
- *      contractsTouched: unique `to` addresses in the call trace
- *  - Never let a simulation error surface as effects; return null and let
- *    the engine's onSimulationFailure default apply.
+ * Contract: never let a simulation error surface as effects; return null and
+ * let the engine's onSimulationFailure default apply.
  */
 export interface Simulator {
   simulate(tx: TxRequest): Promise<SimulatedEffects | null>;
 }
 
-/** Placeholder so the pipeline runs end-to-end before M2 lands. */
+/** No-op fallback: reports simulation as unavailable, so the engine's
+ * onSimulationFailure default (block/escalate) applies to every tx. */
 export class NoopSimulator implements Simulator {
   async simulate(_tx: TxRequest): Promise<SimulatedEffects | null> {
-    return null; // engine treats this per policy.defaults.onSimulationFailure
+    return null;
   }
 }
