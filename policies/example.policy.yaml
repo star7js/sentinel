@@ -1,0 +1,36 @@
+schemaVersion: 1
+defaults:
+  unknownContract: escalate
+  onSimulationFailure: escalate
+
+chains:
+  allowed: [8453]   # Base
+
+contracts:
+  allow:
+    - address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      label: usdc
+  block: []
+
+spend:
+  perTx:
+    native: "0.05 ether"
+    erc20:
+      usdc: "250"
+  perSession:
+    native: "0.2 ether"
+    erc20:
+      usdc: "1000"
+  sessionDuration: 3600
+
+approvals:
+  maxAmount:
+    usdc: "500"
+  infinite: block
+
+delegations:
+  allow: []
+  default: escalate
+
+time:
+  activeHours: null
