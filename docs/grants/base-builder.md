@@ -39,8 +39,10 @@ Live at github.com/star7js/sentinel, tested, CI green:
 - **Fork simulation via Anvil** — the core "effects over intent" differentiator:
   transactions run on a Base fork before signing, and policy judges the decoded
   effects (balance diffs, approvals, delegations), not what the calldata claims
-- Signer proxy with human escalation — out-of-policy transactions throw instead
-  of signing
+- Signer proxy with human escalation over **Telegram or webhook** — deny-safe on
+  timeout; out-of-policy transactions throw instead of signing
+- **Open threat feeds**: known drainer addresses (ScamSniffer, pluggable
+  sources) checked before anything signs; disk-cached, refreshed hourly
 - Test suite runs against a live node in CI, including the router-injection
   scenario end-to-end: the in-policy payment signs, the injected unlimited
   approval is blocked before the signer
@@ -49,10 +51,10 @@ Live at github.com/star7js/sentinel, tested, CI green:
 
 1. **Live demo on Base**: the documented router-injection attack replayed against
    a Base fork and blocked, reproducible by anyone
-2. **Open threat feeds**: known drainer addresses (ScamSniffer,
-   eth-phishing-detect) checked before anything signs
-3. **Integration examples** for agent frameworks building on Base + v0.1 npm
+2. **Integration examples** for agent frameworks building on Base + v0.1 npm
    release
+3. **Signature guarding**: decode EIP-712 permits/orders (the drain path that
+   skips transactions entirely) and apply the same policy before signing
 
 Timeline: 4–6 weeks.
 

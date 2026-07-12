@@ -31,6 +31,14 @@ const schema = z.object({
     allow: z.array(z.string()).default([]),
     default: nonAllow,
   }),
+  escalation: z
+    .object({
+      channel: z.string().min(1),
+      timeoutSeconds: z.number().positive(),
+      onTimeout: z.literal('block'),
+    })
+    .nullable()
+    .default(null),
   time: z
     .object({
       activeHours: z
@@ -97,5 +105,6 @@ export function compilePolicy(
       defaultDecision: toDecision(raw.delegations.default) as 'BLOCK' | 'ESCALATE',
     },
     activeHours: raw.time.activeHours,
+    escalation: raw.escalation,
   };
 }

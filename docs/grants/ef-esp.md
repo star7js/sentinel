@@ -46,7 +46,7 @@ self-hostable, wallet-agnostic equivalent.
 
 ## Current state (proof of execution)
 
-Milestones 1 and 2 are complete and public at github.com/star7js/sentinel:
+Milestones 1–3 are complete and public at github.com/star7js/sentinel:
 
 - **M1** — policy engine (chain allowlists, contract allow/blocklists, per-tx and
   per-session spend caps, approval limits, 7702 delegation checks), YAML policy
@@ -55,10 +55,15 @@ Milestones 1 and 2 are complete and public at github.com/star7js/sentinel:
 - **M2** — fork simulation via Anvil with effect decoding: every candidate
   transaction is executed on a local fork (snapshot → run → revert) and policy is
   evaluated against its decoded effects — balance diffs, approvals granted,
-  EIP-7702 delegations, contracts touched — not calldata claims. The test suite
-  runs against a live node in CI and includes the router-injection scenario
-  end-to-end: an in-policy payment signs; the injected unlimited approval is
-  blocked before the signer is reached.
+  operator approvals (ERC-721/1155 setApprovalForAll), EIP-7702 delegations,
+  contracts touched — not calldata claims. The test suite runs against a live
+  node in CI and includes the router-injection scenario end-to-end: an in-policy
+  payment signs; the injected unlimited approval is blocked before the signer is
+  reached.
+- **M3** — open threat-feed ingestion (ScamSniffer, pluggable sources; disk
+  cache, hourly refresh, last-known-good retention) and human escalation over
+  Telegram and webhooks, deny-safe on timeout or channel failure. Session spend
+  caps persist across process restarts; time-of-day policy windows enforced.
 
 MIT licensed, zero required infrastructure, one-line integration (wrap the signer).
 
@@ -70,9 +75,9 @@ degrades to a silent ALLOW** — errors and missing simulation escalate or block
 
 | Milestone | Deliverable | Timeline |
 |---|---|---|
-| M3 | Open threat-feed ingestion (ScamSniffer, eth-phishing-detect) + Telegram/webhook escalation | Weeks 1–2 |
-| M4 | Public reproducible demo: the documented router-injection attack replayed and blocked live; docs; v0.1 npm release | Weeks 3–4 |
-| M5 | Integration examples for ≥2 agent frameworks / wallet SDKs; policy schema RFC for community iteration | Weeks 5–6 |
+| M4 | Public reproducible demo: the documented router-injection attack replayed and blocked live; docs; v0.1 npm release | Weeks 1–2 |
+| M5 | Integration examples for ≥2 agent frameworks / wallet SDKs; policy schema RFC for community iteration | Weeks 3–4 |
+| M6 | **Signature guarding**: most real-world drains use signed messages (EIP-2612 permits, Permit2, marketplace orders), not transactions — decode EIP-712 payloads and run them through the same approval policy, closing the drain path that bypasses transaction-level firewalls entirely | Weeks 5–8 |
 
 ## Success metrics
 
@@ -83,11 +88,11 @@ degrades to a silent ALLOW** — errors and missing simulation escalate or block
 
 ## Ask
 
-⚠️ TODO — confirm amount. Suggested: **$24,000** — 6 weeks of full-time solo
-development (M3–M5) at a rate consistent with ESP small-grant norms, plus
+⚠️ TODO — confirm amount. Suggested: **$30,000** — 8 weeks of full-time solo
+development (M4–M6) at a rate consistent with ESP small-grant norms, plus
 **$6,000** earmarked for an independent review of the signer proxy and
 simulation paths (the components whose failure would be catastrophic).
-Total: **$30,000**.
+Total: **$36,000**.
 
 ## About me
 

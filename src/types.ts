@@ -101,6 +101,8 @@ export interface CompiledPolicy {
     defaultDecision: Exclude<Decision, 'ALLOW'>;
   };
   activeHours: { start: string; end: string; tz: string } | null;
+  /** Escalation channel settings; construct your Escalator from these. */
+  escalation: { channel: string; timeoutSeconds: number; onTimeout: 'block' } | null;
 }
 
 export const INFINITE_APPROVAL = (1n << 256n) - 1n;
