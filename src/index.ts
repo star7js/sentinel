@@ -10,7 +10,26 @@ export {
   AnvilHandle,
 } from './simulation/anvil.js';
 export { emptyIntel, intelFromAddresses } from './intel/blocklist.js';
+export {
+  loadFeeds,
+  startThreatFeeds,
+  scamSnifferAddresses,
+  FeedSource,
+  FeedLoadOptions,
+  FeedLoadResult,
+  FeedReport,
+  FeedRefreshOptions,
+  FeedRefreshHandle,
+} from './intel/feeds.js';
 export { SessionStore, MemoryStore, JsonFileStore } from './state/store.js';
+export {
+  WebhookEscalator,
+  WebhookEscalatorOptions,
+  TelegramEscalator,
+  TelegramEscalatorOptions,
+  escalationPayload,
+  escalationText,
+} from './signer/escalators.js';
 export {
   SentinelSigner,
   SentinelBlockedError,

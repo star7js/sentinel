@@ -55,12 +55,30 @@ its decoded effects — balance diffs, approvals granted, EIP-7702 delegations,
 contracts touched — are what the policy engine evaluates. A tool call that "looks
 like" a $10 payment but grants an unlimited approval is blocked for what it does.
 
+### Threat feeds and human escalation
+
+```ts
+import { startThreatFeeds, scamSnifferAddresses, TelegramEscalator, WebhookEscalator } from 'sentinel-firewall';
+
+// Open drainer blocklists, refreshed hourly, disk-cached, injected as data.
+const feeds = await startThreatFeeds([scamSnifferAddresses], { cacheDir: '.sentinel-cache' });
+
+// Borderline transactions go to a human with a plain-language summary.
+const escalator = new TelegramEscalator({ botToken: process.env.TG_TOKEN!, chatId: 123456 });
+// ...or POST to your own service: new WebhookEscalator('https://ops.example.com/approve')
+
+const guarded = new SentinelSigner(myRawSigner, policy, simulator, feeds.intel, escalator);
+```
+
+Escalation is deny-safe: a timeout, transport error, or malformed response
+rejects the transaction — the channel being down never means "approved".
+
 ## Status / roadmap
 
 - [x] **M1** Policy engine + signer proxy (this repo, tested)
 - [x] **M2** Anvil fork simulation with effect decoding (`src/simulation/anvil.ts`, tested against a live node)
-- [ ] **M3** Open threat feed ingestion + Telegram/webhook escalation
-- [ ] **M4** Live demo: router-injection attack replayed and blocked
+- [x] **M3** Open threat feed ingestion (`src/intel/feeds.ts`) + Telegram/webhook escalation (`src/signer/escalators.ts`)
+- [ ] **M4** Live demo: router-injection attack replayed and blocked; v0.1 release
 
 ## Develop
 

@@ -1,16 +1,9 @@
 import { ThreatIntel } from '../types.js';
 
 /**
- * M3: Open threat feeds.
- *
- * Candidate sources (all fetched at startup + periodic refresh, cached to disk;
- * never fetched inline during evaluation):
- *  - ScamSniffer open blocklist (github.com/scamsniffer/scam-database)
- *  - MetaMask eth-phishing-detect address lists
- *  - Chainabuse / community-reported drainer addresses
- *
- * Feed data is normalized to lowercase addresses and injected into evaluate()
- * as plain data, keeping the engine pure.
+ * Static/manual threat intel constructors. For live open feeds (fetched at
+ * startup + periodic refresh, disk-cached), see ./feeds.ts — data is always
+ * injected into evaluate() as plain sets, keeping the engine pure.
  */
 export function emptyIntel(): ThreatIntel {
   return { blocked: new Set() };
