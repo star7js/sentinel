@@ -1,0 +1,137 @@
+# Sentinel Policy Engine — Technical Specification (v0.1)
+
+## 1. Overview
+
+The policy engine is a pure, deterministic function:
+
+```
+evaluate(request: TxRequest, effects: SimulatedEffects | null, policy: Policy, state: SessionState)
+  → Verdict { decision: ALLOW | BLOCK | ESCALATE, reasons: RuleResult[] }
+```
+
+Design constraints:
+
+- **Pure and synchronous.** No I/O inside evaluation. Simulation and threat intel run *before* evaluation and feed in as inputs. This makes the engine trivially testable and auditable.
+- **Deny-unknown-by-default is configurable, deny-on-error is not.** If simulation fails or a rule throws, the verdict is ESCALATE, never ALLOW.
+- **Effects over intent.** When simulated effects are available, rules evaluate against effects (what the tx *does*), falling back to calldata decoding only when simulation is unavailable.
+
+## 2. Data model
+
+```ts
+interface TxRequest {
+  chainId: number;
+  from: Address;
+  to: Address | null;          // null = contract creation
+  value: bigint;               // wei
+  data: Hex;
+  nonce?: number;
+  authorizationList?: Eip7702Authorization[];  // 7702 delegations are first-class
+}
+
+interface SimulatedEffects {
+  balanceDiffs: { address: Address; token: Address | 'native'; delta: bigint }[];
+  approvals: { token: Address; spender: Address; amount: bigint }[];   // amount = 2^256-1 → infinite
+  delegations: { authority: Address; delegate: Address }[];           // EIP-7702
+  contractsTouched: Address[];
+  reverted: boolean;
+}
+
+interface SessionState {
+  sessionStart: number;         // unix seconds
+  spentBySession: bigint;       // native, wei, cumulative ALLOWed value
+  spentByToken: Map<Address, bigint>;
+  txCount: number;
+}
+```
+
+## 3. Policy schema
+
+Policies are YAML/JSON, versioned with a `schemaVersion` field. Example:
+
+```yaml
+schemaVersion: 1
+defaults:
+  unknownContract: escalate     # allow | block | escalate
+  onSimulationFailure: escalate # block | escalate (allow is invalid)
+
+chains:
+  allowed: [8453]               # Base only for v1
+
+contracts:
+  allow:
+    - address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"  # USDC on Base
+      label: usdc
+  block: []
+
+spend:
+  perTx:
+    native: "0.05 ether"
+    erc20:
+      usdc: "250"
+  perSession:
+    native: "0.2 ether"
+    erc20:
+      usdc: "1000"
+  sessionDuration: 3600         # seconds
+
+approvals:
+  maxAmount:
+    usdc: "500"
+  infinite: block               # infinite approvals always blocked
+
+delegations:                     # EIP-7702
+  allow: []                      # empty = all delegations escalate
+  default: escalate
+
+time:
+  activeHours: null              # or { start: "09:00", end: "18:00", tz: "UTC" }
+
+escalation:
+  channel: webhook               # webhook | telegram | stdin (dev)
+  timeoutSeconds: 300
+  onTimeout: block
+```
+
+Amount strings are parsed with token decimals resolved at load time (decimals fetched once and pinned in the compiled policy, not at eval time).
+
+## 4. Rule pipeline
+
+Rules run in fixed order; **first BLOCK wins immediately; ESCALATE accumulates; ALLOW requires all rules to pass.**
+
+1. `chain-allowed` — chainId in policy.chains.allowed
+2. `intel-blocklist` — `to` and all `contractsTouched` absent from threat feeds (feed data injected as input)
+3. `contract-allowlist` — every touched contract allowed, or handled per `defaults.unknownContract`
+4. `revert-check` — simulated tx must not revert (revert → BLOCK; agents retrying reverts is a known failure/attack amplifier)
+5. `spend-per-tx` — net negative balance diffs on `from` within per-tx caps (native and per-token)
+6. `spend-per-session` — cumulative including this tx within session caps
+7. `approval-limits` — every approval in effects within `approvals.maxAmount`; infinite approvals per `approvals.infinite`
+8. `delegation-check` — any 7702 authorization or delegation effect must match `delegations.allow`
+9. `time-window` — current time within `activeHours` if set
+
+Each rule returns `{ ruleId, decision, humanSummary }`. `humanSummary` is mandatory: it is what the escalation message shows the human (e.g. "This transaction grants unlimited USDC spending to 0xabc… (unrecognized contract)").
+
+## 5. Session accounting
+
+- Session state is updated **only after a tx is signed and broadcast**, not at ALLOW time, to avoid counting txs the caller drops.
+- Sessions roll over after `sessionDuration`; state resets.
+- State persistence is pluggable (in-memory default; JSON file adapter shipped) so the library has zero required infra.
+
+## 6. Failure semantics
+
+| Condition | Verdict |
+|---|---|
+| Rule throws | ESCALATE (with error attached) |
+| Simulation unavailable | per `defaults.onSimulationFailure` |
+| Policy fails schema validation at load | refuse to start |
+| Escalation channel unreachable | `onTimeout` behavior applies immediately |
+
+## 7. Out of scope for v0.1
+
+- LLM-based intent-vs-effect comparison (v0.2 candidate)
+- Multi-chain sessions
+- Solana / non-EVM
+- Hosted anything
+
+## 8. Threat model summary
+
+Assumed attacker: can inject or mutate tool calls upstream of the signer (compromised router, prompt injection, malicious MCP server). Cannot: modify Sentinel's process, policy file, or the fork node. Sentinel's guarantee: no transaction is signed whose *simulated effects* violate the policy, and no failure path degrades to silent ALLOW.
