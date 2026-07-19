@@ -113,10 +113,22 @@ development and integration work (A2–A3), and **$6,000** retainer for the
 
 ## About me
 
-⚠️ TODO — this section carries the most weight for a solo applicant. Include:
-your name/handle, security background or relevant interest, links to shipped
-repos (this one first), anything deployed on-chain, and how reviewers can verify
-your commit history. Link commits, not claims.
+**Josh Simnitt** — solo maintainer.
+GitHub: [github.com/star7js](https://github.com/star7js) · jsimnitt@gmail.com
+
+The strongest evidence I can offer is the repository itself: the
+[commit history](https://github.com/star7js/sentinel/commits/main) shows this
+project going from specification to a complete, CI-verified v0.3.0 — engine,
+fork simulation, threat feeds, escalation, signature guarding, ERC-4337
+support, adapters, and a reproducible replay of the documented attack — with
+every milestone tested against live nodes before merge. Development is
+AI-assisted and openly attributed in the commit log; design decisions,
+invariants, and known limits are documented in the repo (`docs/SPEC.md`,
+`SECURITY.md`, `CONTRIBUTING.md`) so the work is reviewable without trusting
+any claim in this application.
+
+_[Optional: add 1–2 sentences on your professional background or prior
+projects before submitting.]_
 
 ## Verify our claims (2 minutes)
 

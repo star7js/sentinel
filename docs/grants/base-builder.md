@@ -77,7 +77,12 @@ Timeline: 4–6 weeks of integration work; audit and maintenance in parallel.
 
 ## Team
 
-⚠️ TODO — name/handle, links to shipped work, this repo's commit history.
+**Josh Simnitt** ([github.com/star7js](https://github.com/star7js) ·
+jsimnitt@gmail.com) — solo maintainer. Evidence over prose: the
+[commit history](https://github.com/star7js/sentinel/commits/main) shows the
+project going from spec to CI-verified v0.3.0, every milestone tested against
+a live chainId-8453 node before merge. AI-assisted development, openly
+attributed in the commit log.
 
 ## Verify in 2 minutes
 
