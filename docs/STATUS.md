@@ -26,9 +26,9 @@ Details: `CHANGELOG.md` (what, by version) · `docs/SPEC.md` (how) ·
 - [ ] **`npm login && npm publish`** — publishes `sentinel-firewall@0.3.0`
       with the `sentinel-mcp` bin; the package name is unclaimed and
       `prepublishOnly` runs the tests for you
-- [ ] **Fill in the ⚠️ TODO "About me / Team" sections** in
-      `docs/grants/ef-esp.md`, `base-builder.md`, `gitcoin.md` — link commits,
-      not claims
+- [x] **About me / Team sections** filled in (Josh Simnitt · jsimnitt@gmail.com
+      · github.com/star7js); one optional background sentence remains in
+      `ef-esp.md` if desired
 - [ ] **Confirm ask amounts** against current program tiers (drafted: $36k
       ESP = $12k audit + $18k integrations/v0.4 + $6k maintenance; 2–5 ETH
       Base)

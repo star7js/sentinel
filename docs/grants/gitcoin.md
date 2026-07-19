@@ -66,5 +66,6 @@ maintenance of the threat feeds everyone shares.
 
 ## Team
 
-⚠️ TODO — handle, background, links. Gitcoin donors check that the repo is alive:
-recent commits matter more than prose here.
+**Josh Simnitt** ([github.com/star7js](https://github.com/star7js) ·
+jsimnitt@gmail.com) — solo maintainer. The repo is alive and verifiable:
+recent commits, green CI, and the attack-blocked demo running on every push.
